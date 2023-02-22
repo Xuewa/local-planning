@@ -6,13 +6,13 @@ export default {
   data() {
     return {
       viewPortList: [{
-        id: 'shore',
+        id: 'Shore',
         name: '海岸线',
       },{
-        id: 'bridge',
+        id: 'Bridge',
         name: '望桥',
       },{
-        id: 'neighborhood',
+        id: 'Neighborhood',
         name: '街区'
       }]
     }
