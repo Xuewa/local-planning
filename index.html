@@ -4,10 +4,13 @@
     <meta charset="UTF-8" />
     <!-- <link rel="icon" type="image/svg+xml" href="/vite.svg" /> -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- 控件引入main.css，否则显示有问题 -->
+    <link rel="stylesheet" href="https://js.arcgis.com/4.20/esri/css/main.css">
+    <link rel="stylesheet" href="https://s3-us-west-1.amazonaws.com/patterns.esri.com/files/calcite-web/1.2.5/css/calcite-web.min.css">
     <title>local planning</title>
   </head>
-  <body>
-    <div id="app"></div>
+  <body id="app">
+  
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>
