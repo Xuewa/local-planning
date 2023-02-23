@@ -4,7 +4,6 @@ export default {
     loadingshow: Boolean
   },
   created() {
-    console.log(this.loadingshow)
   }
 }
 
