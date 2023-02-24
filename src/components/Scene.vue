@@ -10,7 +10,7 @@ import SpatialReference from '@arcgis/core/geometry/SpatialReference'
 import Polygon from '@arcgis/core/geometry/Polygon'
 import Graphic from '@arcgis/core/Graphic'
 import Collection from "@arcgis/core/core/Collection"
-import Slide from "@arcgis/core/WebScene/Slide"
+import {whenNotOnce} from "@arcgis/core/core/watchUtils"
 
 export default {
   data() {
@@ -23,19 +23,7 @@ export default {
     }
   },
   created() {
-    const map = new WebScene({
-      portalItem: {
-        id: 'bceae470c9a04e5bb3ad42323c726c97',
-      },
-    });
-    this.map = map
-    const view = new SceneView({
-        map: map,
-        qualityProfile: 'medium',
-    })
-    this.view = view
-    // this.slides = toRaw(this.map).presentation.slides
-    // console.log(this.slides)
+    this.initScene()
   },
   computed: {
     ...mapState(['viewPortId'])
@@ -46,66 +34,77 @@ export default {
     }
   },
   mounted() {
-    // 初始化map、view、vectorTileLayer
-    this.initScene()
+    toRaw(this.view).container = 'sceneView'
+
     this.startAnimation()
   },
   methods: {
+    // 初始化map、view、vectorTileLayer、mask
     initScene() {
-      toRaw(this.view).container = 'sceneView'
-      toRaw(this.view).when(()=>{
-        // 矢量瓦片图层
-        const vectorLayer = new VectorTileLayer({
-          portalItem: {
-            id: '5cf1abb43c25482e8a9e373953498999',
-          },
-          visible: false
-        })
-        toRaw(this.map).add(vectorLayer)
-        const planningArea= [[-8235924.058660398, 4968738.274357371],
-        [-8235409.000644938, 4968717.325404106],
-        [-8235333.439527529, 4968898.289607817],
-        [-8235295.877979361, 4969109.891441089],
-        [-8236134.357229519, 4969027.878528339],
-        [-8236138.632189713, 4968850.261903069],
-        [-8235919.081131686, 4968836.806196137]]
-        // 生成抽象面
-        const maskPolygon = new Polygon({
-          rings: [planningArea],
-          spatialReference: SpatialReference.WebMercator
-        })
-        console.log(maskPolygon)
-        // 生成面的符号，才可以在图层显示
-        const polygonSymbol = {
-          type: 'simple-fill',
-          color: [226, 119, 40, 0],
-          outline: {
-            width: 0
-          }
-        }
-        // 生成graphic图形，在图层显示
-        const maskGraphic = new Graphic({
-          symbol: polygonSymbol,
-          geometry: maskPolygon
-        })
-        // 拉近
-        this.maskGraphic = maskGraphic
-        // console.log(toRaw(this.map).presentation.slides)
-        toRaw(this.view)
-          .goTo(maskGraphic)
-          .catch(function(error) {
-            // if (error.name != "AbortError") {
-              console.error(error);
-            // }
-          });
+      const map = new WebScene({
+        portalItem: {
+          id: 'bceae470c9a04e5bb3ad42323c726c97',
+        },
+      });
+      this.map = map
+      const view = new SceneView({
+          map: map,
+          qualityProfile: 'medium',
       })
+      this.view = view
+      // 矢量瓦片图层
+      const vectorLayer = new VectorTileLayer({
+        portalItem: {
+          id: '5cf1abb43c25482e8a9e373953498999',
+        },
+        visible: false
+      })
+      toRaw(this.map).add(vectorLayer)
+      // 区域area
+      const planningArea= [[-8235924.058660398, 4968738.274357371],
+      [-8235409.000644938, 4968717.325404106],
+      [-8235333.439527529, 4968898.289607817],
+      [-8235295.877979361, 4969109.891441089],
+      [-8236134.357229519, 4969027.878528339],
+      [-8236138.632189713, 4968850.261903069],
+      [-8235919.081131686, 4968836.806196137]]
+      // 生成抽象面
+      const maskPolygon = new Polygon({
+        rings: [planningArea],
+        spatialReference: SpatialReference.WebMercator
+      })
+      // 生成面的符号，才可以在图层显示
+      const polygonSymbol = {
+        type: 'simple-fill',
+        color: [226, 119, 40, 0],
+        outline: {
+          width: 0
+        }
+      }
+      // 生成graphic图形，在图层显示
+      const maskGraphic = new Graphic({
+        symbol: polygonSymbol,
+        geometry: maskPolygon
+      })
+      // 拉近
+      this.maskGraphic = maskGraphic
     },
     startAnimation() {
-      // 拉近view
+      whenNotOnce(toRaw(this.view), 'updating')
+        .then(() => {console.log('----')})
+        // 拉近view
+        .then(() => {toRaw(this.view).goTo(toRaw(this.maskGraphic))})
+        .then(() => {
+          this.areaLineAnimation()
+        })
+      
       // 描边
       // 同颜色盖住
       // 切换视角
       // 拉近
+    },
+    areaLineAnimation() {
+
     },
     switchViewPort(vpId) {
       var slides = toRaw(this.map).presentation.slides
