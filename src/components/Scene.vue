@@ -42,7 +42,6 @@ export default {
   },
   mounted() {
     toRaw(this.view).container = 'sceneView'
-
     this.startAnimation()
   },
   methods: {
@@ -120,6 +119,7 @@ export default {
         },
       })
       this.sketchLayer = sketchLayer
+      
     },
     startAnimation() {
       whenNotOnce(toRaw(this.view), 'updating')
@@ -128,11 +128,11 @@ export default {
         // 描边
         .then(() => {
           toRaw(this.map).add(toRaw(this.sketchLayer))
+          toRaw(this.sketchLayer).add(toRaw(this.maskPolyline))
           this.areaLineAnimation()
         }).catch((err)=>{
           console.error(err)
         })
-      
       // 同颜色盖住
       // 切换视角
       // 拉近
@@ -182,18 +182,18 @@ export default {
           }
         }
       })
-      points.forEach((point,index)=>{
-        timeLine = timeLine.add({
-          targets: movingPoint,
-          easing: "easeInOutCubic",
-          duration: durations[index],
-          x: point[0],
-          y: point[1],
-          complete: () => {
-            paths.push([movingPoint.x, movingPoint.y])
-          },
-        })
-      })
+      // points.forEach((point,index)=>{
+      //   timeLine = timeLine.add({
+      //     targets: movingPoint,
+      //     easing: "easeInOutCubic",
+      //     duration: durations[index],
+      //     x: point[0],
+      //     y: point[1],
+      //     complete: () => {
+      //       paths.push([movingPoint.x, movingPoint.y])
+      //     },
+      //   })
+      // })
     },
     switchViewPort(vpId) {
       var slides = toRaw(this.map).presentation.slides
