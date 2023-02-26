@@ -2,7 +2,8 @@ import { createStore } from 'vuex'
 const store = createStore({
     state () {
         return {
-            viewPortId: 'shore'
+            viewPortId: 'shore',
+            startState: false,
         }
     },
     getters:{},
@@ -10,6 +11,9 @@ const store = createStore({
     mutations: {
         switchViewPort (state, viewPortId) {
             state.viewPortId = viewPortId
+        },
+        switchStartState (state, flag) {
+            state.startState = flag
         }
     }
 })

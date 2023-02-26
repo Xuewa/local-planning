@@ -1,14 +1,16 @@
 <script setup>
 import Scene from './components/Scene.vue'
-import Box from './components/box/Box.vue'
+import TopBar from './components/TopBar.vue'
+import Menu from './components/Menu.vue'
 import Loading from './components/Loading.vue'
 </script>
 
 <template>
   <!-- 地图view -->
   <Scene />
-  <!-- box：用户操作 -->
-  <Box />
+  <!-- 顶部视角菜单 -->
+  <TopBar />
+  <Menu />
   <Loading :loadingshow='false'/>
 
   

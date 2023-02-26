@@ -14,12 +14,18 @@ export default {
       },{
         id: 'Neighborhood',
         name: '街区'
-      }]
+      }],
+      viewPortIndex: -1
     }
   },
   methods:{
     switchViewPort(vpId) {
       this.$store.commit('switchViewPort', vpId)
+      this.viewPortList.forEach((vp,idx)=>{
+        if (vp.id==vpId) {
+          this.viewPortIndex = idx
+        }
+      })
     }
   }
 }
@@ -28,7 +34,7 @@ export default {
 
 <template>
   <ul id="top-bar" >
-    <li class="viewPortItem" v-for="vp in viewPortList" :key="vp.id" @click="switchViewPort(vp.id)">{{vp.name}}</li>
+    <li :class="['viewPortItem',index==viewPortIndex?'active':''] " v-for="(vp,index) in viewPortList" :key="vp.id" @click="switchViewPort(vp.id)">{{vp.name}}</li>
   </ul>
   
 </template>
@@ -37,18 +43,20 @@ export default {
   #top-bar{
     display:flex;
     border-radius: 6px;
-    background: rgba($color: #fff, $alpha: .8);
+    background: rgba($color: #fff, $alpha: .6);
     line-height: 2;
     padding: 10px;
     font-size: 18px;
+    position: fixed;
     li{
       text-decoration: none;
       list-style: none;
       width: 100px;
       text-align: center;
       border-radius: 4px;
-      &:hover{
-        background: rgba($color: #fff, $alpha: .9);
+      margin: 0;
+      &:hover,&.active{
+        background: rgba($color: #fff, $alpha: .7);
         cursor: pointer;
       }
     }

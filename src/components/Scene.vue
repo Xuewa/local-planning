@@ -8,6 +8,7 @@ import SceneView from '@arcgis/core/views/SceneView'
 // 矢量瓦片图层
 import VectorTileLayer from "@arcgis/core/layers/VectorTileLayer"
 import GraphicsLayer from "@arcgis/core/layers/GraphicsLayer"
+import FeatureFilter from "@arcgis/core/layers/support/FeatureFilter"
 import SpatialReference from '@arcgis/core/geometry/SpatialReference'
 import Polygon from '@arcgis/core/geometry/Polygon'
 import Polyline from '@arcgis/core/geometry/Polyline'
@@ -25,19 +26,26 @@ export default {
       sketchLayer: GraphicsLayer,
       maskGraphic: Graphic,
       maskPolyline: Graphic,
+      maskPolygon: Polygon,
       slides: Collection,
-      planningArea: Array
+      planningArea: Array,
+      EMPTY_LINE: Polygon
     }
   },
   created() {
     this.initScene()
   },
   computed: {
-    ...mapState(['viewPortId'])
+    ...mapState(['viewPortId','startState'])
   },
   watch: {
     viewPortId (newVal) {
       this.switchViewPort(newVal)
+    },
+    startState (newVal) {
+      if (newVal) {
+        this.startAnimation()
+      }
     }
   },
   mounted() {
@@ -66,6 +74,7 @@ export default {
         visible: false
       })
       toRaw(this.map).add(vectorLayer)
+      this.vectorLayer = vectorLayer
       // 区域area
       this.planningArea= [[-8235924.058660398, 4968738.274357371],
       [-8235409.000644938, 4968717.325404106],
@@ -81,28 +90,23 @@ export default {
         spatialReference: SpatialReference.WebMercator
       })
       // 生成面的符号，才可以在图层显示
-      const polygonSymbol = {
-        type: 'simple-fill',
-        color: [226, 119, 40, 0],
-        outline: {
-          width: 0
-        }
-      }
+      const polygonSymbol = this.polygonSymbolFunc(new Color([226, 119, 40, 0]))
       // 生成graphic图形，在图层显示
       const maskGraphic = new Graphic({
         symbol: polygonSymbol,
         geometry: maskPolygon
       })
+      this.maskPolygon = maskPolygon
       // 拉近
       this.maskGraphic = maskGraphic
-
       // 描边
+      const EMPTY_LINE = new Polyline({
+                  paths: [[[0, 0], [1, 1]]],
+                  spatialReference: SpatialReference.WebMercator,
+                })
+      this.EMPTY_LINE = EMPTY_LINE            
       this.maskPolyline = new Graphic({
-        geometry: 
-          new Polyline({
-            paths: [[[0, 0], [1, 1]]],
-            spatialReference: SpatialReference.WebMercator,
-          }),
+        geometry: toRaw(this.EMPTY_LINE),
         symbol: {
           type: "line-3d",
           symbolLayers: [{
@@ -119,29 +123,51 @@ export default {
         },
       })
       this.sketchLayer = sketchLayer
-      
+      toRaw(this.map).add(toRaw(this.sketchLayer))
+      toRaw(this.sketchLayer).add(toRaw(this.maskGraphic))
+      toRaw(this.sketchLayer).add(toRaw(this.maskPolyline))
+      // highlight white
+      const highlightMaskSymbol = this.polygonSymbolFunc([256,256,256,.15])
+      const highlightMaskGraphic = new Graphic({
+        symbol: highlightMaskSymbol,
+        geometry: maskPolygon
+      })
+      toRaw(this.sketchLayer).add(highlightMaskGraphic)
+    },
+    polygonSymbolFunc(color){
+      const polygonSymbol = {
+        type: 'simple-fill',
+        color,
+        outline: {
+          width: 0
+        }
+      }
+      return polygonSymbol
     },
     startAnimation() {
-      whenNotOnce(toRaw(this.view), 'updating')
-        // 拉近view
-        .then(() => {toRaw(this.view).goTo(toRaw(this.maskGraphic))})
-        // 描边
+      return whenNotOnce(toRaw(this.view), 'updating')
+        // 下沉拉近view
         .then(() => {
-          toRaw(this.map).add(toRaw(this.sketchLayer))
-          toRaw(this.sketchLayer).add(toRaw(this.maskPolyline))
-          this.areaLineAnimation()
+          toRaw(this.vectorLayer).visible = false
+          toRaw(this.view).goTo(toRaw(this.maskGraphic))})
+        // 描边
+        .then(() => this.areaLineAnimation())
+        // 同颜色盖住
+        .then(() => this.maskAnimation())
+        .then(() =>{
+          // this.disJointBuilding()
+        // 拉近初始角度
+        }).then(() => {
+          this.startPlan()
+          this.$store.commit('switchStartState', false)
         }).catch((err)=>{
           console.error(err)
         })
-      // 同颜色盖住
-      // 切换视角
-      // 拉近
     },
     areaLineAnimation() {
       const AREA_ANIMATION_DURATION = 2000
       var points = toRaw(this.planningArea).slice(1)
       points.push(toRaw(this.planningArea[0]))
-      console.log(points)
       let durations = []
       let totalDis = 0
       let disArr = []
@@ -156,7 +182,7 @@ export default {
       // 计算时间
       disArr.forEach((distance)=>{
         let duration = distance/totalDis*AREA_ANIMATION_DURATION
-        duration = duration.toFixed(2)
+        duration = duration
         durations.push(duration)
       })
       var paths = [toRaw(this.planningArea[0])]
@@ -164,16 +190,11 @@ export default {
             x: toRaw(this.planningArea[0][0]),
             y: toRaw(this.planningArea[0][1]),
           }
-      // console.log(movingPoint)
-      // console.log(paths)
-
       var paths = [toRaw(this.planningArea[0])]
       let timeLine = anime.timeline({
         update: () => {
           if (paths.length) {
-          // console.log(movingPoint)
             var newPaths = [paths.concat([[movingPoint.x, movingPoint.y]])]
-            // console.log(newPaths)
             toRaw(this.maskPolyline).geometry = {
               type: "polyline",
               paths: newPaths,
@@ -182,30 +203,79 @@ export default {
           }
         }
       })
-      // points.forEach((point,index)=>{
-      //   timeLine = timeLine.add({
-      //     targets: movingPoint,
-      //     easing: "easeInOutCubic",
-      //     duration: durations[index],
-      //     x: point[0],
-      //     y: point[1],
-      //     complete: () => {
-      //       paths.push([movingPoint.x, movingPoint.y])
-      //     },
-      //   })
-      // })
+      points.forEach((point,index)=>{
+        timeLine = timeLine.add({
+          targets: movingPoint,
+          easing: "easeInOutCubic",
+          duration: durations[index],
+          x: point[0],
+          y: point[1],
+          complete: () => {
+            paths.push([movingPoint.x, movingPoint.y])
+          },
+        })
+      })
+      return timeLine.finished
+    },
+    maskAnimation() {
+      const MASK_ANIMATION_DURATION = 1000
+      const maskColor = new Color([226, 119, 40, 0])
+      const buildColor = new Color([256, 256, 256])
+      let timeLine = anime.timeline({
+        update: ()=>{
+          toRaw(this.maskGraphic).symbol = this.polygonSymbolFunc(maskColor)
+          this.disJointBuilding()
+        }
+      }).add({
+        targets: [maskColor, buildColor],
+        easing: "easeInOutCubic",
+        duration: MASK_ANIMATION_DURATION,
+        r: 226,
+        g: 119,
+        b: 40,
+        a: 0.6
+      }).add({
+        targets: [maskColor, buildColor],
+        easing: "easeInOutCubic",
+        duration: MASK_ANIMATION_DURATION,
+        delay: 300,
+        endDelay: 1500,
+        a: 0,
+        complete: ()=>{
+          toRaw(this.maskPolyline).geometry = toRaw(this.EMPTY_LINE)
+        }
+      })
+      return timeLine.finished
+    },
+    disJointBuilding() {
+      var promise  = new Promise((resolve)=>{
+        var sceneLayer = toRaw(this.map).layers.find((layer) => layer.type === "scene")
+        toRaw(this.view).whenLayerView(sceneLayer).then((lv)=>{
+          // 创建sceneViewLayer
+          let layerView = lv
+          // 过滤area上的要素
+          layerView.filter = new FeatureFilter({
+            spatialRelationship: 'disjoint',
+            geometry: toRaw(this.maskPolygon)
+          })
+          resolve()
+        })
+      })
+      return promise
+    },
+    startPlan() {
+      this.switchViewPort('Shore')
+      toRaw(this.vectorLayer).visible = true
     },
     switchViewPort(vpId) {
       var slides = toRaw(this.map).presentation.slides
-      // console.log(slides)
       var tempVP = toRaw(slides.getItemAt(0))
       slides.forEach((item)=>{
         if (item.title.text == vpId) {
           tempVP = item
-          console.log(toRaw(tempVP.viewpoint))
         }
       })
-      toRaw(this.view).goTo(tempVP.viewpoint)
+      return toRaw(this.view).goTo(tempVP.viewpoint)
     }
   }
 }
