@@ -6,7 +6,8 @@ const store = createStore({
             startState: false,
             subMenu: [],
             // mainMenuIndex: 0,
-            subMenuIndex: 0
+            subMenuIndex: 0,
+            geoId: ''
         }
     },
     getters:{},
@@ -18,14 +19,14 @@ const store = createStore({
         switchStartState (state, flag) {
             state.startState = flag
         },
-        // switchMainState(state, mainMenu) {
-        //     state.subMenu = subMenu
-        // },
         switchSubMenuState(state, subMenu) {
             state.subMenu = subMenu
         },
         switchSubMenuId() {
 
+        },
+        switchGeoId(state, geoId) {
+            state.geoId = geoId
         }
     }
 })

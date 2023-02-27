@@ -4,6 +4,7 @@ import TopBar from './components/TopBar.vue'
 import MainMenu from './components/MainMenu.vue'
 import SubMenu from './components/SubMenu.vue'
 import Loading from './components/Loading.vue'
+
 </script>
 
 <template>
@@ -14,8 +15,6 @@ import Loading from './components/Loading.vue'
   <SubMenu />
   <MainMenu />
   <Loading :loadingshow='false'/>
-
-  
 </template>
 
 <style scoped>

@@ -3,18 +3,18 @@ import { mapState } from 'vuex'
 
 export default {
   computed: {
-    ...mapState(['subMenu'])
+    ...mapState(['subMenu','geoId'])
   },  
   methods:{
     drawGeomestry(geoId) {
-      
+      this.$store.commit('switchGeoId', geoId)
     }
   }
 }
 </script>
 <template>
-  <ul id="sub-menu" >
-    <li :class="['menuItem',index==0?'active':''] " v-for="(menu,index) in subMenu" 
+  <ul id="sub-menu" v-if="subMenu&&subMenu.length">
+    <li :class="['menuItem',menu.id==geoId?'active':''] " v-for="(menu,index) in subMenu" 
         :key="menu.id" @click="drawGeomestry(menu.id)">
       <span>{{menu.name}}</span>
     </li>

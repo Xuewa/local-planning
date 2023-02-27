@@ -7,6 +7,7 @@ import WebScene from '@arcgis/core/WebScene'
 import SceneView from '@arcgis/core/views/SceneView'
 // 矢量瓦片图层
 import VectorTileLayer from "@arcgis/core/layers/VectorTileLayer"
+import SketchViewModel from "@arcgis/core/widgets/Sketch/SketchViewModel"
 import GraphicsLayer from "@arcgis/core/layers/GraphicsLayer"
 import FeatureFilter from "@arcgis/core/layers/support/FeatureFilter"
 import SpatialReference from '@arcgis/core/geometry/SpatialReference'
@@ -36,7 +37,7 @@ export default {
     this.initScene()
   },
   computed: {
-    ...mapState(['viewPortId','startState'])
+    ...mapState(['viewPortId','startState', 'geoId'])
   },
   watch: {
     viewPortId (newVal) {
@@ -46,6 +47,9 @@ export default {
       if (newVal) {
         this.startAnimation()
       }
+    },
+    geoId(newVal) {
+      this.createArea()
     }
   },
   mounted() {
@@ -276,6 +280,38 @@ export default {
         }
       })
       return toRaw(this.view).goTo(tempVP.viewpoint)
+    },
+    createArea() {
+      const polygonSymbol = {
+        type: "simple-fill", // autocasts as new SimpleFillSymbol()
+        color: "#F2BC94",
+        outline: {
+          // autocasts as new SimpleLineSymbol()
+          color: "#722620",
+          width: 3
+        }
+      }
+      const sketchViewModel = new SketchViewModel({
+        view: toRaw(this.view),
+        layer: toRaw(this.sketchLayer),
+        polygonSymbol,
+        updateOnGraphicClick: false
+      })
+      console.log(sketchViewModel)
+      sketchViewModel.on("create", function(event) {
+        // check if the create event's state has changed to complete indicating
+        // the graphic create operation is completed.
+        console.log(event)
+        // if (event.state === "complete") {
+        //   // remove the graphic from the layer. Sketch adds
+        //   // the completed graphic to the layer by default.
+        //   polygonGraphicsLayer.remove(event.graphic);
+
+        //   // use the graphic.geometry to query features that intersect it
+        //   selectFeatures(event.graphic.geometry);
+        // }
+      });
+
     }
   }
 }
