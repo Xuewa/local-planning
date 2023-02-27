@@ -1,6 +1,5 @@
 <script>
-import WebScene from '@arcgis/core/WebScene'
-import SceneView from '@arcgis/core/views/SceneView'
+import {toRaw} from 'vue'
 
 export default {
   data() {
@@ -63,14 +62,21 @@ export default {
         icon: 'fas fa-car',
         type: 'gallery'
       }],
-      menuIndex: -1
+      menuId: -1
     }
   },
   methods:{
     createPlan() {
       this.$store.commit('switchStartState', true)
     },
-    submitPlan(){},
+    switcMainMenu(menuId){
+      this.menuId = menuId
+      this.menuList.forEach(item=>{
+        if (item.id == menuId) {
+          this.$store.commit('switchSubMenuState', toRaw(item.subMenuList))
+        }
+      })
+    },
   }
 }
 
@@ -80,7 +86,8 @@ export default {
   <div id="menu-wrp">
     <div class="new-plan" @click="createPlan">新计划</div>
     <ul id="main-menu" >
-      <li :class="['menuItem',index==menuIndex?'active':''] " v-for="(menu,index) in menuList" :key="menu.id" @click="switchViewPort(menu.id)">
+      <li :class="['menuItem',menu.id==menuId?'active':''] " v-for="(menu) in menuList" 
+      :key="menu.id" @click="switcMainMenu(menu.id)">
         <span :class="[menu.icon]"></span>
         <span>{{menu.name}}</span>
       </li>

@@ -4,6 +4,9 @@ const store = createStore({
         return {
             viewPortId: 'shore',
             startState: false,
+            subMenu: [],
+            // mainMenuIndex: 0,
+            subMenuIndex: 0
         }
     },
     getters:{},
@@ -14,6 +17,15 @@ const store = createStore({
         },
         switchStartState (state, flag) {
             state.startState = flag
+        },
+        // switchMainState(state, mainMenu) {
+        //     state.subMenu = subMenu
+        // },
+        switchSubMenuState(state, subMenu) {
+            state.subMenu = subMenu
+        },
+        switchSubMenuId() {
+
         }
     }
 })

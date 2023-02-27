@@ -1,7 +1,8 @@
 <script setup>
 import Scene from './components/Scene.vue'
 import TopBar from './components/TopBar.vue'
-import Menu from './components/Menu.vue'
+import MainMenu from './components/MainMenu.vue'
+import SubMenu from './components/SubMenu.vue'
 import Loading from './components/Loading.vue'
 </script>
 
@@ -10,7 +11,8 @@ import Loading from './components/Loading.vue'
   <Scene />
   <!-- 顶部视角菜单 -->
   <TopBar />
-  <Menu />
+  <SubMenu />
+  <MainMenu />
   <Loading :loadingshow='false'/>
 
   
