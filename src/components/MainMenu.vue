@@ -10,16 +10,20 @@ export default {
         icon: 'fas fa-layer-group',
         subMenuList: [{
           name: '地面',
-          id: 'create ground'
+          id: 'ground',
+          color: '#f0f0f0'
         },{
           name: '草坪',
-          id: 'create lawn'
+          id: 'lawn',
+          color: '#bdce8a'
         },{
           name: '沙滩',
-          id: 'create beach'
+          id: 'beach',
+          color: '#dfca8f'
         },{
           name: '人造湖',
-          id: 'create water'
+          id: 'water',
+          color: '#a0b4cf'
         }]
       },{
         name: '铺路',
@@ -27,10 +31,12 @@ export default {
         icon: 'fas fa-road',
         subMenuList: [{
           name: '街道',
-          id: 'create street'
+          id: 'street',
+          color: '#cbcbcb'
         },{
           name: '人行道',
-          id: 'create walking path'
+          id: 'walking path',
+          color: '#b2b2b2'
         }]
       },{
         name: '建筑',

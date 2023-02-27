@@ -13,6 +13,7 @@ import FeatureFilter from "@arcgis/core/layers/support/FeatureFilter"
 import SpatialReference from '@arcgis/core/geometry/SpatialReference'
 import Polygon from '@arcgis/core/geometry/Polygon'
 import Polyline from '@arcgis/core/geometry/Polyline'
+import SimpleLineSymbol from "@arcgis/core/symbols/SimpleLineSymbol";
 import Graphic from '@arcgis/core/Graphic'
 import Color from "@arcgis/core/Color";
 import Collection from "@arcgis/core/core/Collection"
@@ -37,7 +38,7 @@ export default {
     this.initScene()
   },
   computed: {
-    ...mapState(['viewPortId','startState', 'geoId'])
+    ...mapState(['viewPortId','startState', 'geoId','geoColor', 'geoType'])
   },
   watch: {
     viewPortId (newVal) {
@@ -49,7 +50,22 @@ export default {
       }
     },
     geoId(newVal) {
-      this.createArea()
+      if (newVal!==''&&this.geoType == 'polygon') {
+        const polygonSymbol = {
+          type: "simple-fill", // autocasts as new SimpleFillSymbol()
+          color: this.geoColor,
+          outline: {
+            width: 0
+          }
+        }
+        this.createPolygon(polygonSymbol)
+      } else if(newVal!==''&&this.geoType=='polyline') {
+        const symbol = new SimpleLineSymbol({
+          color: this.geoColor,
+          width: 16
+        })
+        this.createPolyline(symbol)
+      }
     }
   },
   mounted() {
@@ -281,37 +297,36 @@ export default {
       })
       return toRaw(this.view).goTo(tempVP.viewpoint)
     },
-    createArea() {
-      const polygonSymbol = {
-        type: "simple-fill", // autocasts as new SimpleFillSymbol()
-        color: "#F2BC94",
-        outline: {
-          // autocasts as new SimpleLineSymbol()
-          color: "#722620",
-          width: 3
-        }
-      }
+    createPolygon(polygonSymbol) {
       const sketchViewModel = new SketchViewModel({
         view: toRaw(this.view),
         layer: toRaw(this.sketchLayer),
         polygonSymbol,
         updateOnGraphicClick: false
       })
-      console.log(sketchViewModel)
+      const _this = this
       sketchViewModel.on("create", function(event) {
-        // check if the create event's state has changed to complete indicating
-        // the graphic create operation is completed.
-        console.log(event)
-        // if (event.state === "complete") {
-        //   // remove the graphic from the layer. Sketch adds
-        //   // the completed graphic to the layer by default.
-        //   polygonGraphicsLayer.remove(event.graphic);
-
-        //   // use the graphic.geometry to query features that intersect it
-        //   selectFeatures(event.graphic.geometry);
-        // }
+        if (event.state === "complete") {
+          toRaw(_this.sketchLayer).add(event.graphic)
+          _this.$store.commit('switchGeoId', '')
+        }
       });
-
+      sketchViewModel.create('polygon')
+    },
+    createPolyline(polylineSymbol) {
+      const sketchViewModel = new SketchViewModel({
+        view: toRaw(this.view),
+        layer: toRaw(this.sketchLayer),
+        polylineSymbol,
+        updateOnGraphicClick: false
+      })
+      const _this = this
+      sketchViewModel.on("create", function(event) {
+        if (event.state === "complete") {
+          toRaw(_this.sketchLayer).add(event.graphic)
+        }
+      });
+      sketchViewModel.create('polyline')
     }
   }
 }

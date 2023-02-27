@@ -7,7 +7,9 @@ const store = createStore({
             subMenu: [],
             // mainMenuIndex: 0,
             subMenuIndex: 0,
-            geoId: ''
+            geoId: '',
+            geoColor: '#f0f0f0',
+            geoType: 'polygon'
         }
     },
     getters:{},
@@ -22,11 +24,14 @@ const store = createStore({
         switchSubMenuState(state, subMenu) {
             state.subMenu = subMenu
         },
-        switchSubMenuId() {
-
-        },
         switchGeoId(state, geoId) {
             state.geoId = geoId
+        },
+        switchGeoColor(state, geoColor) {
+            state.geoColor = geoColor
+        },
+        switchGeoType(state, geoType) {
+            state.geoType = geoType
         }
     }
 })

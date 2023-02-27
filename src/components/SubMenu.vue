@@ -6,8 +6,14 @@ export default {
     ...mapState(['subMenu','geoId'])
   },  
   methods:{
-    drawGeomestry(geoId) {
+    drawGeomestry(geoId, color) {
       this.$store.commit('switchGeoId', geoId)
+      this.$store.commit('switchGeoColor', color)
+      if (geoId=='ground'||geoId == 'water'||geoId=='lawn'||geoId=='beach'){
+        this.$store.commit('switchGeoType', 'polygon')
+      } else if (geoId=='street'||geoId=='walking path'){
+        this.$store.commit('switchGeoType', 'polyline')
+      }
     }
   }
 }
@@ -15,7 +21,7 @@ export default {
 <template>
   <ul id="sub-menu" v-if="subMenu&&subMenu.length">
     <li :class="['menuItem',menu.id==geoId?'active':''] " v-for="(menu,index) in subMenu" 
-        :key="menu.id" @click="drawGeomestry(menu.id)">
+        :key="menu.id" @click="drawGeomestry(menu.id, menu.color)">
       <span>{{menu.name}}</span>
     </li>
   </ul>
