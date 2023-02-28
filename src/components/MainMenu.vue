@@ -49,8 +49,8 @@ export default {
           name: '5层建筑',
           id: '5-story-building'
         },{
-          name: '10层建筑',
-          id: '10-story-building'
+          name: '9层建筑',
+          id: '9-story-building'
         }]
       },{
         name: '指示图标',
@@ -85,9 +85,7 @@ export default {
     },
   }
 }
-
 </script>
-
 <template>
   <div id="menu-wrp">
     <div class="new-plan" @click="createPlan">新计划</div>

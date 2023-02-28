@@ -5,11 +5,11 @@ const store = createStore({
             viewPortId: 'shore',
             startState: false,
             subMenu: [],
-            // mainMenuIndex: 0,
             subMenuIndex: 0,
             geoId: '',
             geoColor: '#f0f0f0',
-            geoType: 'polygon'
+            geoType: 'polygon',
+            currentOperation: false
         }
     },
     getters:{},
@@ -32,6 +32,9 @@ const store = createStore({
         },
         switchGeoType(state, geoType) {
             state.geoType = geoType
+        },
+        switchCurrentOperation(state, currentOperation) {
+            state.currentOperation = currentOperation
         }
     }
 })

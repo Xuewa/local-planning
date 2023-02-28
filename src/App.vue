@@ -12,7 +12,9 @@ import Loading from './components/Loading.vue'
   <Scene />
   <!-- 顶部视角菜单 -->
   <TopBar />
+  <!-- 次菜单 -->
   <SubMenu />
+  <!-- 主菜单 -->
   <MainMenu />
   <Loading :loadingshow='false'/>
 </template>

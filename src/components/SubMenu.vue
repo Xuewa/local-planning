@@ -13,6 +13,8 @@ export default {
         this.$store.commit('switchGeoType', 'polygon')
       } else if (geoId=='street'||geoId=='walking path'){
         this.$store.commit('switchGeoType', 'polyline')
+      } else if (geoId.indexOf('story')!==-1){
+        this.$store.commit('switchGeoType', 'polyline3D')
       }
     }
   }
@@ -20,7 +22,7 @@ export default {
 </script>
 <template>
   <ul id="sub-menu" v-if="subMenu&&subMenu.length">
-    <li :class="['menuItem',menu.id==geoId?'active':''] " v-for="(menu,index) in subMenu" 
+    <li :class="['menuItem',menu.id==geoId?'active':''] " v-for="menu in subMenu" 
         :key="menu.id" @click="drawGeomestry(menu.id, menu.color)">
       <span>{{menu.name}}</span>
     </li>
