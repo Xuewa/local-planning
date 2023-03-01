@@ -54,7 +54,7 @@ export default {
     geoId(newVal) {
       if (newVal!==''&&this.geoType == 'polygon') {
         const polygonSymbol = {
-          type: "simple-fill", // autocasts as new SimpleFillSymbol()
+          type: "simple-fill", 
           color: this.geoColor,
           outline: {
             width: 0
