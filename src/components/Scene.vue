@@ -40,7 +40,7 @@ export default {
     this.initScene()
   },
   computed: {
-    ...mapState(['viewPortId', 'startState', 'geoId', 'geoColor', 'geoType', 'currentOperation'])
+    ...mapState(['viewPortId', 'startState', 'geoId', 'geoColor', 'geoType', 'currentOperation','symbolItem'])
   },
   watch: {
     viewPortId (newVal) {
@@ -221,6 +221,7 @@ export default {
         }).then(() => {
           this.startPlan()
           this.$store.commit('switchStartState', false)
+
         }).catch((err)=>{
           console.error(err)
         })
@@ -374,11 +375,11 @@ export default {
       sketchViewModel.create('polyline')
       _this.$store.commit('switchCurrentOperation',true)
     },
-    createPoint() {
+    createPoint(pointSymbol) {
       const sketchViewModel = new SketchViewModel({
         view: toRaw(this.view),
         layer: toRaw(this.sketchLayer),
-        polylineSymbol,
+        pointSymbol,
         updateOnGraphicClick: false
       })
       const _this = this
