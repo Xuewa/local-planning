@@ -54,17 +54,17 @@ export default {
         }]
       },{
         name: '指示图标',
-        id: 'icons',
+        id: 'Icons',
         icon: 'fas fa-map-marker-alt',
         type: 'gallery'
       },{
         name: '植物',
-        id: 'tree',
+        id: 'Trees',
         icon: 'fas fa-tree',
         type: 'gallery'
       },{
         name: '交通工具',
-        id: 'vehicles',
+        id: 'Vehicles',
         icon: 'fas fa-car',
         type: 'gallery'
       }],
@@ -80,6 +80,12 @@ export default {
       this.menuList.forEach(item=>{
         if (item.id == menuId) {
           this.$store.commit('switchSubMenuState', toRaw(item.subMenuList))
+          console.log(item.subMenuList)
+          if (!item.subMenuList) {
+            this.$store.commit('switchGeoId', menuId)
+            this.$store.commit('switchSubMenuState', [])
+            this.$store.commit('switchGeoType', 'point')
+          }
         }
       })
     },

@@ -9,7 +9,8 @@ const store = createStore({
             geoId: '',
             geoColor: '#f0f0f0',
             geoType: 'polygon',
-            currentOperation: false
+            currentOperation: false,
+            symbolItem: {}
         }
     },
     getters:{},
@@ -23,6 +24,7 @@ const store = createStore({
         },
         switchSubMenuState(state, subMenu) {
             state.subMenu = subMenu
+            // console.log(subMenu)
         },
         switchGeoId(state, geoId) {
             state.geoId = geoId
@@ -35,7 +37,11 @@ const store = createStore({
         },
         switchCurrentOperation(state, currentOperation) {
             state.currentOperation = currentOperation
+        },
+        switchSymbolItem(state, symbolItem) {
+            state.symbolItem = symbolItem
         }
+
     }
 })
 export default store

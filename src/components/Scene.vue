@@ -19,6 +19,8 @@ import Graphic from '@arcgis/core/Graphic'
 import Color from "@arcgis/core/Color";
 import Collection from "@arcgis/core/core/Collection"
 import {whenNotOnce} from "@arcgis/core/core/watchUtils"
+import WebStyleSymbol from "@arcgis/core/symbols/WebStyleSymbol";
+
 const BUILDING_COLOR = "#FFFFFF"
 const BUILDING_FLOOR_HEIGHT = 3
 export default {
@@ -40,7 +42,7 @@ export default {
     this.initScene()
   },
   computed: {
-    ...mapState(['viewPortId', 'startState', 'geoId', 'geoColor', 'geoType', 'currentOperation'])
+    ...mapState(['viewPortId', 'startState', 'geoId', 'geoColor', 'geoType', 'currentOperation','symbolItem'])
   },
   watch: {
     viewPortId (newVal) {
@@ -85,6 +87,21 @@ export default {
           }]
         })
         this.createPolygon(symbol)
+      }
+    },
+    symbolItem(newVal) {
+      console.log(newVal)
+      // console.log(this.geoType)
+      if (newVal&&this.geoType=='point') {
+        const webSymbol = new WebStyleSymbol({
+          name: newVal.name,
+          // ---xxx---
+          styleName: 'EsriIconsStyle',
+        });
+        webSymbol.fetchSymbol().then((symbol)=>{
+          console.log(symbol)
+          this.createPoint(symbol)
+        })
       }
     }
   },
@@ -221,6 +238,7 @@ export default {
         }).then(() => {
           this.startPlan()
           this.$store.commit('switchStartState', false)
+
         }).catch((err)=>{
           console.error(err)
         })
@@ -374,18 +392,18 @@ export default {
       sketchViewModel.create('polyline')
       _this.$store.commit('switchCurrentOperation',true)
     },
-    createPoint() {
+    createPoint(pointSymbol) {
       const sketchViewModel = new SketchViewModel({
         view: toRaw(this.view),
         layer: toRaw(this.sketchLayer),
-        polylineSymbol,
+        pointSymbol,
         updateOnGraphicClick: false
       })
       const _this = this
       sketchViewModel.on("create", function(event) {
+        console.log(event)
         if (event.state === "complete") {
           toRaw(_this.sketchLayer).add(event.graphic)
-
         }
       });
       sketchViewModel.create('point')

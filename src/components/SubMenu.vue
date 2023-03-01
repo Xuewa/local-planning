@@ -1,9 +1,13 @@
 <script>
 import { mapState } from 'vuex'
+import Gallery from './Gallery.vue'
 
 export default {
+  components:{
+    Gallery
+  },
   computed: {
-    ...mapState(['subMenu','geoId'])
+    ...mapState(['subMenu','geoId','geoType'])
   },  
   methods:{
     drawGeomestry(geoId, color) {
@@ -15,18 +19,23 @@ export default {
         this.$store.commit('switchGeoType', 'polyline')
       } else if (geoId.indexOf('story')!==-1){
         this.$store.commit('switchGeoType', 'polyline3D')
+      } else if (geoId=='Trees'||geoId=='Icons'||geoId=='Vehicles') {
+        this.$store.commit('swtichGeoType', 'point')
       }
     }
   }
 }
 </script>
 <template>
-  <ul id="sub-menu" v-if="subMenu&&subMenu.length">
-    <li :class="['menuItem',menu.id==geoId?'active':''] " v-for="menu in subMenu" 
-        :key="menu.id" @click="drawGeomestry(menu.id, menu.color)">
-      <span>{{menu.name}}</span>
-    </li>
-  </ul>
+  <div class="subMenu-wrp">
+    <ul id="sub-menu" v-show="subMenu&&subMenu.length" :style="{marginLeft:(subMenu.length?('-'+subMenu.length*110/2+'px'):'')}">
+      <li :class="['menuItem',menu.id==geoId?'active':''] " v-for="menu in subMenu" 
+          :key="menu.id" @click="drawGeomestry(menu.id, menu.color)">
+        <span>{{menu.name}}</span>
+      </li>
+    </ul>
+    <Gallery v-show="(!subMenu)||(!subMenu.length)||(typeof subMenu == 'undefined')"/>
+  </div>
 </template>
 
 <style scoped lang="scss">
@@ -44,6 +53,7 @@ export default {
     text-align: center;
     cursor: pointer;
     margin: 0;
+    left: 50%;
     li{
       text-decoration: none;
       list-style: none;
