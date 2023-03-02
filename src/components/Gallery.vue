@@ -55,7 +55,6 @@ export default {
           })
           if (tkw!=='') {
             groupItem.fetchData().then((data)=>{
-              console.log(data.items)
               this.galleryGroups[iconType]= data.items
             })
           }
@@ -74,16 +73,13 @@ export default {
     },
     selectSymbolItem(symbolItem) {
       this.$store.commit('switchSymbolItem', symbolItem)
-      // console.log(symbolItem)
-      // symbolItem.fetchSymbol().then(symbol=>{
-      //   console.log(symbol)
-      // })
+      this.$store.commit('switchGalleryShow', false)
     },
   }
 }
 </script>
 <template>
-  <ul class="gallery-grid" v-show="galleryShow">
+  <ul class="gallery-grid" >
     <li :class="['gallery-grid-item'] " v-for="item in galleryGroups[geoId]" 
         :key="item.id" @click="selectSymbolItem(item)" >
       <img :src="item.thumbnail.href" />

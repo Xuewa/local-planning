@@ -42,7 +42,7 @@ export default {
     this.initScene()
   },
   computed: {
-    ...mapState(['viewPortId', 'startState', 'geoId', 'geoColor', 'geoType', 'currentOperation','symbolItem'])
+    ...mapState(['viewPortId', 'startState', 'geoId', 'geoColor', 'geoType', 'geoId','currentOperation','symbolItem'])
   },
   watch: {
     viewPortId (newVal) {
@@ -90,17 +90,49 @@ export default {
       }
     },
     symbolItem(newVal) {
-      console.log(newVal)
-      // console.log(this.geoType)
       if (newVal&&this.geoType=='point') {
+        var styleName = 'EsriIconsStyle'
+        switch (this.geoId){
+          case 'Icons':
+            styleName = 'EsriIconsStyle'
+            break
+          case 'Trees':
+            styleName = 'EsriRealisticTreesStyle'
+            break
+          case 'Vehicles':
+            styleName = 'EsriRealisticTransportationStyle'
+        }
         const webSymbol = new WebStyleSymbol({
           name: newVal.name,
-          // ---xxx---
-          styleName: 'EsriIconsStyle',
+          styleName,
         });
         webSymbol.fetchSymbol().then((symbol)=>{
-          console.log(symbol)
-          this.createPoint(symbol)
+          console.log(symbol.symbolLayers)
+          var actualSymbol = symbol
+          // 修改icon样子
+          if (symbol.symbolLayers.length) {
+            if (symbol.symbolLayers.getItemAt(0).type == 'icon') {
+              console.log('---')
+              const icon = symbol.symbolLayers.getItemAt(0)
+              icon.anchor = 'relative'
+              icon.anchorPosition = {
+                x: 0,
+                y: 0
+              }
+              symbol.verticalOffset = {
+                screencLength: 20,
+                maxWorldLength: 50,
+                mminWorldLength: 5,
+              }
+              symbol.callout = {
+                type: "line",
+                color: [200, 200, 200],
+                size: 0.8,
+              }
+            }
+            actualSymbol = symbol.clone()
+          }
+          this.createPoint(actualSymbol)
         })
       }
     }
@@ -128,11 +160,9 @@ export default {
         if (!this.currentOperation) {
           view.hitTest(event)
           .then((response) => {
-            console.log(response)
             response.results.some((result) => {
               const graphic = result.graphic;
               if (graphic && graphic.geometry) {
-                // return this.updateGraphic(graphic);
               }
               return false;
             });
@@ -401,9 +431,9 @@ export default {
       })
       const _this = this
       sketchViewModel.on("create", function(event) {
-        console.log(event)
         if (event.state === "complete") {
           toRaw(_this.sketchLayer).add(event.graphic)
+          _this.$store.commit('switchSymbolItem', null)
         }
       });
       sketchViewModel.create('point')

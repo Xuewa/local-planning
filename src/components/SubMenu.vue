@@ -7,7 +7,7 @@ export default {
     Gallery
   },
   computed: {
-    ...mapState(['subMenu','geoId','geoType'])
+    ...mapState(['subMenu','geoId','geoType', 'galleryShow']),
   },  
   methods:{
     drawGeomestry(geoId, color) {
@@ -34,7 +34,7 @@ export default {
         <span>{{menu.name}}</span>
       </li>
     </ul>
-    <Gallery v-show="(!subMenu)||(!subMenu.length)||(typeof subMenu == 'undefined')"/>
+    <Gallery v-show="galleryShow"/>
   </div>
 </template>
 

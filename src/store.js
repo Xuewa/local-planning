@@ -10,10 +10,12 @@ const store = createStore({
             geoColor: '#f0f0f0',
             geoType: 'polygon',
             currentOperation: false,
-            symbolItem: {}
+            symbolItem: null,
+            galleryShow: false
         }
     },
-    getters:{},
+    getters:{
+    },
     // 定义修改方法，用commit真正调用
     mutations: {
         switchViewPort (state, viewPortId) {
@@ -40,6 +42,9 @@ const store = createStore({
         },
         switchSymbolItem(state, symbolItem) {
             state.symbolItem = symbolItem
+        },
+        switchGalleryShow(state, galleryShow){
+            state.galleryShow = galleryShow
         }
 
     }

@@ -80,11 +80,11 @@ export default {
       this.menuList.forEach(item=>{
         if (item.id == menuId) {
           this.$store.commit('switchSubMenuState', toRaw(item.subMenuList))
-          console.log(item.subMenuList)
           if (!item.subMenuList) {
             this.$store.commit('switchGeoId', menuId)
             this.$store.commit('switchSubMenuState', [])
             this.$store.commit('switchGeoType', 'point')
+            this.$store.commit('switchGalleryShow', true)
           }
         }
       })
