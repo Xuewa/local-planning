@@ -30,12 +30,14 @@ export default {
       view: SceneView,
       vectorLayer: VectorTileLayer,
       sketchLayer: GraphicsLayer,
+      pointLGraphicLayer: GraphicsLayer,
       maskGraphic: Graphic,
       maskPolyline: Graphic,
       maskPolygon: Polygon,
       slides: Collection,
       planningArea: Array,
       EMPTY_LINE: Polygon,
+      fetchPromise: Promise
     }
   },
   created() {
@@ -106,31 +108,24 @@ export default {
           name: newVal.name,
           styleName,
         });
-        webSymbol.fetchSymbol().then((symbol)=>{
-          var actualSymbol = symbol
-          // 修改icon样子
-          if (symbol.symbolLayers.length) {
-            if (symbol.symbolLayers.getItemAt(0).type == 'icon') {
-              const icon = symbol.symbolLayers.getItemAt(0)
-              icon.anchor = 'relative'
-              icon.anchorPosition = {
-                x: 0,
-                y: 0
-              }
-              symbol.verticalOffset = {
-                screencLength: 20,
-                maxWorldLength: 50,
-                mminWorldLength: 5,
-              }
-              symbol.callout = {
-                type: "line",
-                color: [200, 200, 200],
-                size: 0.8,
-              }
-            }
-            actualSymbol = symbol.clone()
+       webSymbol.fetchSymbol().then(
+        (actualSymbol) => {
+          var isIcon = false
+          const symbolLayer = actualSymbol.symbolLayers.getItemAt(0)
+          if (symbolLayer.type === "icon") {
+            actualSymbol.verticalOffset = {
+              screenLength: 20,
+              maxWorldLength: 50,
+              minWorldLength: 5,
+            };
+            actualSymbol.callout = {
+              type: "line",
+              color: [200, 200, 200],
+              size: 0.8,
+            };
+            isIcon = true
           }
-          this.createPoint(actualSymbol)
+          this.createPoint(actualSymbol.clone(), isIcon)
         })
       }
     }
@@ -161,6 +156,7 @@ export default {
             response.results.some((result) => {
               const graphic = result.graphic;
               if (graphic && graphic.geometry) {
+                
               }
               return false;
             });
@@ -211,6 +207,37 @@ export default {
       })
       this.sketchLayerInit()
     },
+    fetchSymbol() {
+      if (!this.fetchPromise) {
+        this.fetchPromise = this.webSymbol.fetchSymbol().then(
+          (actualSymbol) => {
+            // Add vertical offset to icon symbols as otherwise they vanish inside
+            // extruded buildings where the ground is not even.
+            if (actualSymbol.symbolLayers.length) {
+              const symbolLayer = actualSymbol.symbolLayers.getItemAt(0);
+              if (symbolLayer.type === "icon") {
+                // const icon = symbolLayer as IconSymbol3DLayer;
+                // icon.anchor = "relative";
+                // icon.anchorPosition = { x: 0, y: 0.6 };
+                actualSymbol.verticalOffset = {
+                  screenLength: 20,
+                  maxWorldLength: 50,
+                  minWorldLength: 5,
+                };
+                actualSymbol.callout = {
+                  type: "line",
+                  color: [200, 200, 200],
+                  size: 0.8,
+                }
+
+                return actualSymbol.clone();
+              }
+            }
+            return actualSymbol;
+          });
+      }
+      return this.fetchPromise;
+    },
     // 图形图层
     sketchLayerInit() {
       const sketchLayer = new GraphicsLayer({
@@ -219,7 +246,13 @@ export default {
         },
       })
       this.sketchLayer = sketchLayer
+      this.pointLGraphicLayer = new GraphicsLayer({
+        elevationInfo: {
+          mode: "relative-to-scene",
+        },
+      })
       toRaw(this.map).add(toRaw(this.sketchLayer))
+      toRaw(this.map).add(toRaw(this.pointLGraphicLayer))
       toRaw(this.sketchLayer).add(toRaw(this.maskGraphic))
       toRaw(this.sketchLayer).add(toRaw(this.maskPolyline))
       const highlightMaskSymbol = this.polygonSymbolFunc([256,256,256,.15])
@@ -420,22 +453,32 @@ export default {
       sketchViewModel.create('polyline')
       _this.$store.commit('switchCurrentOperation',true)
     },
-    createPoint(pointSymbol) {
+    createPoint(pointSymbol, isIcon) {
       const sketchViewModel = new SketchViewModel({
         view: toRaw(this.view),
         layer: toRaw(this.sketchLayer),
         updateOnGraphicClick: false
       })
+      if (!isIcon) {
+        sketchViewModel.pointSymbol = pointSymbol
+      }
+      var graphic = new Graphic({symbol:pointSymbol})
       const _this = this
       sketchViewModel.on("create", function(event) {
+        graphic.geometry = event.graphic.geometry
         if (event.state === "complete") {
-
-          // toRaw(_this.sketchLayer).add(event.graphic)
-          // _this.$store.commit('switchSymbolItem', null)
+          _this.$store.commit('switchSymbolItem', null)
+        } else {
+          // 和平面图层不同的图层
+          if (isIcon) {
+            toRaw(_this.pointLGraphicLayer).add(graphic)
+          } else {
+            toRaw(_this.sketchLayer).add(graphic)
+          }
         }
       });
       sketchViewModel.create('point')
-    }
+    },
   }
 }
 </script>

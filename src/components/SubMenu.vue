@@ -13,6 +13,7 @@ export default {
     drawGeomestry(geoId, color) {
       this.$store.commit('switchGeoId', geoId)
       this.$store.commit('switchGeoColor', color)
+      this.$store.commit('switchSubMenuState', [])
       if (geoId=='ground'||geoId == 'water'||geoId=='lawn'||geoId=='beach'){
         this.$store.commit('switchGeoType', 'polygon')
       } else if (geoId=='street'||geoId=='walking path'){
