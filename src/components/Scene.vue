@@ -107,12 +107,10 @@ export default {
           styleName,
         });
         webSymbol.fetchSymbol().then((symbol)=>{
-          console.log(symbol.symbolLayers)
           var actualSymbol = symbol
           // 修改icon样子
           if (symbol.symbolLayers.length) {
             if (symbol.symbolLayers.getItemAt(0).type == 'icon') {
-              console.log('---')
               const icon = symbol.symbolLayers.getItemAt(0)
               icon.anchor = 'relative'
               icon.anchorPosition = {
@@ -426,14 +424,14 @@ export default {
       const sketchViewModel = new SketchViewModel({
         view: toRaw(this.view),
         layer: toRaw(this.sketchLayer),
-        pointSymbol,
         updateOnGraphicClick: false
       })
       const _this = this
       sketchViewModel.on("create", function(event) {
         if (event.state === "complete") {
-          toRaw(_this.sketchLayer).add(event.graphic)
-          _this.$store.commit('switchSymbolItem', null)
+
+          // toRaw(_this.sketchLayer).add(event.graphic)
+          // _this.$store.commit('switchSymbolItem', null)
         }
       });
       sketchViewModel.create('point')
