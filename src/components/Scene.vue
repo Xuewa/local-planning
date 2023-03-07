@@ -44,7 +44,7 @@ export default {
     this.initScene()
   },
   computed: {
-    ...mapState(['viewPortId', 'startState', 'geoId', 'geoColor', 'geoType', 'geoId','currentOperation','symbolItem'])
+    ...mapState(['viewPortId', 'startState', 'geoId', 'geoColor', 'geoType', 'geoId','currentOperation','symbolItem','screenShot'])
   },
   watch: {
     viewPortId (newVal) {
@@ -128,6 +128,23 @@ export default {
           this.createPoint(actualSymbol.clone(), isIcon)
         })
       }
+    },
+    screenShot(newVal) {
+      console.log(newVal)
+      if (newVal) {
+        var options = {
+          format: 'png'
+        }
+        toRaw(this.view).takeScreenshot(options).then((after)=>{
+          console.log(after)
+          toRaw(this.vectorLayer).visible = false
+          whenNotOnce(toRaw(this.view), 'updating').then(()=>{
+            toRaw(this.raw).takeScreenshot(options).then((before)=>{
+              this.mixScreenShot(before, after)
+            })
+          })
+        })
+      }
     }
   },
   mounted() {
@@ -156,7 +173,7 @@ export default {
             response.results.some((result) => {
               const graphic = result.graphic;
               if (graphic && graphic.geometry) {
-                
+
               }
               return false;
             });
@@ -479,6 +496,16 @@ export default {
       });
       sketchViewModel.create('point')
     },
+    mixScreenShot(before, after) {
+      const canvas = document.getElementById("screenshotCanvas")
+      const context = canvas.getContext("2d")
+      const height = canvas.width = canvas.height = Math.min(before.data.width, 2 * before.data.height);
+      const x = -(before.data.width - height) / 2;
+      const dirtyY = (before.data.height - height / 2) / 2;
+      context.putImageData(before.data, x, -dirtyY, 0, dirtyY, before.data.width, height / 2);
+      context.putImageData(after.data, x, height / 2 - dirtyY, 0, dirtyY, after.data.width, height / 2);
+
+    }
   }
 }
 </script>

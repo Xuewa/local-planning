@@ -11,7 +11,8 @@ const store = createStore({
             geoType: 'polygon',
             currentOperation: false,
             symbolItem: null,
-            galleryShow: false
+            galleryShow: false,
+            screenShot: false
         }
     },
     getters:{
@@ -45,6 +46,10 @@ const store = createStore({
         },
         switchGalleryShow(state, galleryShow){
             state.galleryShow = galleryShow
+        },
+        switchScreenShot(state, screenShot) {
+            // console.log()
+            state.screenShot = screenShot
         }
 
     }

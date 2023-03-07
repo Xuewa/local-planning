@@ -90,6 +90,10 @@ export default {
         }
       })
     },
+    submitPlan() {
+      console.log('---')
+      this.$store.commit('switchScreenShot', true)
+    }
   }
 }
 </script>
