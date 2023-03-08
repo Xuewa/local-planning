@@ -12,7 +12,9 @@ const store = createStore({
             currentOperation: false,
             symbolItem: null,
             galleryShow: false,
-            screenShot: false
+            showScreenShot: false,
+            beforeScreenShot: undefined,
+            afterScreenShot: undefined
         }
     },
     getters:{
@@ -47,9 +49,15 @@ const store = createStore({
         switchGalleryShow(state, galleryShow){
             state.galleryShow = galleryShow
         },
-        switchScreenShot(state, screenShot) {
-            // console.log()
-            state.screenShot = screenShot
+        switchShowScreenShot(state, screenShot) {
+            state.showScreenShot = screenShot
+        },
+        switchBeforeScreenShot(state, screenShot){
+            state.beforeScreenShot = screenShot
+            console.log(screenShot)
+        },
+        switchAfterScreenShot(state, screenShot){
+            state.afterScreenShot = screenShot
         }
 
     }

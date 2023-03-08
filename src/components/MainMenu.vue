@@ -92,7 +92,7 @@ export default {
     },
     submitPlan() {
       console.log('---')
-      this.$store.commit('switchScreenShot', true)
+      this.$store.commit('switchShowScreenShot', true)
     }
   }
 }
