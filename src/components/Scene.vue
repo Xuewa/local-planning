@@ -30,7 +30,7 @@ export default {
       view: SceneView,
       vectorLayer: VectorTileLayer,
       sketchLayer: GraphicsLayer,
-      pointLGraphicLayer: GraphicsLayer,
+      pointGraphicLayer: GraphicsLayer,
       maskGraphic: Graphic,
       maskPolyline: Graphic,
       maskPolygon: Polygon,
@@ -125,7 +125,8 @@ export default {
             };
             isIcon = true
           }
-          this.createPoint(actualSymbol.clone(), isIcon)
+          const IS_CREATE = true
+          this.pointHandler(actualSymbol.clone(),undefined, isIcon, IS_CREATE)
         })
       }
     }
@@ -137,6 +138,7 @@ export default {
   methods: {
     // 初始化map、view、vectorTileLayer、mask
     initScene() {
+      const IS_UPDATE = false
       const map = new WebScene({
         portalItem: {
           id: 'bceae470c9a04e5bb3ad42323c726c97',
@@ -156,7 +158,10 @@ export default {
             response.results.some((result) => {
               const graphic = result.graphic;
               if (graphic && graphic.geometry) {
-                
+                console.log(graphic)
+                if (graphic.geometry.type == 'point') {
+                  this.pointHandler(undefined,graphic, true,IS_UPDATE)
+                }
               }
               return false;
             });
@@ -246,13 +251,13 @@ export default {
         },
       })
       this.sketchLayer = sketchLayer
-      this.pointLGraphicLayer = new GraphicsLayer({
+      this.pointGraphicLayer = new GraphicsLayer({
         elevationInfo: {
           mode: "relative-to-scene",
         },
       })
       toRaw(this.map).add(toRaw(this.sketchLayer))
-      toRaw(this.map).add(toRaw(this.pointLGraphicLayer))
+      toRaw(this.map).add(toRaw(this.pointGraphicLayer))
       toRaw(this.sketchLayer).add(toRaw(this.maskGraphic))
       toRaw(this.sketchLayer).add(toRaw(this.maskPolyline))
       const highlightMaskSymbol = this.polygonSymbolFunc([256,256,256,.15])
@@ -434,7 +439,6 @@ export default {
       });
       sketchViewModel.create('polygon')
       this.$store.commit('switchCurrentOperation',true)
-
     },
     createPolyline(polylineSymbol) {
       const sketchViewModel = new SketchViewModel({
@@ -453,32 +457,52 @@ export default {
       sketchViewModel.create('polyline')
       _this.$store.commit('switchCurrentOperation',true)
     },
-    createPoint(pointSymbol, isIcon) {
+    pointHandler(pointSymbol, graphic, isIcon, create) {
       const sketchViewModel = new SketchViewModel({
         view: toRaw(this.view),
-        layer: toRaw(this.sketchLayer),
+        layer: toRaw(this.pointGraphicLayer),
         updateOnGraphicClick: false
       })
-      if (!isIcon) {
+      if (!isIcon&&create) {
         sketchViewModel.pointSymbol = pointSymbol
       }
-      var graphic = new Graphic({symbol:pointSymbol})
+      graphic = graphic?graphic:new Graphic({symbol:pointSymbol})
+      console.log(graphic.geometry)
+      
       const _this = this
       sketchViewModel.on("create", function(event) {
-        graphic.geometry = event.graphic.geometry
+        _this.pointGraphicEvent(sketchViewModel,event, graphic, isIcon)
+      });
+      sketchViewModel.on("update", function(event) {
+        _this.pointGraphicEvent(sketchViewModel,event, graphic, isIcon)
+      });
+      if  (create) {
+        sketchViewModel.create('point')
+      } else {
+        sketchViewModel.update(graphic)
+      }
+    },
+    pointGraphicEvent(svm,event,graphic, isIcon){
+      // createEvent->event.graphic; updateEvent->event.graphics;
+      const eventGraphic = event.graphic?event.graphic:event.graphics[0]
+      graphic.geometry = event.graphic?event.graphic.geometry.clone():event.graphics[0].geometry.clone()
+        // 去除非 pointGraphicLayer 图层的graphic，对于icon而言是下面的圈圈
         if (event.state === "complete") {
-          _this.$store.commit('switchSymbolItem', null)
+           if (eventGraphic!==graphic) {
+            svm.layer.remove(eventGraphic)
+          }
+          svm.destroy()
+          svm.cancel()
+          this.$store.commit('switchSymbolItem', null)
         } else {
           // 和平面图层不同的图层
           if (isIcon) {
-            toRaw(_this.pointLGraphicLayer).add(graphic)
+            toRaw(this.pointGraphicLayer).add(graphic)
           } else {
-            toRaw(_this.sketchLayer).add(graphic)
+            toRaw(this.sketchLayer).add(graphic)
           }
         }
-      });
-      sketchViewModel.create('point')
-    },
+    }
   }
 }
 </script>
