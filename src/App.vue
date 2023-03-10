@@ -4,6 +4,7 @@ import TopBar from './components/TopBar.vue'
 import MainMenu from './components/MainMenu.vue'
 import SubMenu from './components/SubMenu.vue'
 import Loading from './components/Loading.vue'
+import CanvasEle from './components/CanvasEle.vue'
 
 </script>
 
@@ -17,6 +18,7 @@ import Loading from './components/Loading.vue'
   <!-- 主菜单 -->
   <MainMenu />
   <Loading :loadingshow='false'/>
+  <CanvasEle />
 </template>
 
 <style scoped>

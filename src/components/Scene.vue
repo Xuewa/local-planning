@@ -44,7 +44,7 @@ export default {
     this.initScene()
   },
   computed: {
-    ...mapState(['viewPortId', 'startState', 'geoId', 'geoColor', 'geoType', 'geoId','currentOperation','symbolItem'])
+    ...mapState(['viewPortId', 'startState', 'geoId', 'geoColor', 'geoType', 'geoId','currentOperation','symbolItem','showScreenShot'])
   },
   watch: {
     viewPortId (newVal) {
@@ -53,6 +53,10 @@ export default {
     startState (newVal) {
       if (newVal) {
         this.startAnimation()
+        toRaw(this.pointGraphicLayer).clear()
+        toRaw(this.sketchLayer).clear()
+        toRaw(this.pointGraphicLayer).visible = true
+        toRaw(this.sketchLayer).visible = true
       }
     },
     geoId(newVal) {
@@ -127,6 +131,27 @@ export default {
           }
           const IS_CREATE = true
           this.pointHandler(actualSymbol.clone(),undefined, isIcon, IS_CREATE)
+        })
+      }
+    },
+    showScreenShot(newVal) {
+      console.log(newVal)
+      if (newVal) {
+        var options = {
+          format: 'png'
+        }
+        toRaw(this.view).takeScreenshot(options).then((after)=>{
+          toRaw(this.vectorLayer).visible = false
+          toRaw(this.pointGraphicLayer).visible = false
+          setTimeout(() => {
+            whenNotOnce(toRaw(this.view), 'updating').then(()=>{
+              toRaw(this.view).takeScreenshot(options).then((before)=>{
+                this.$store.commit('switchBeforeScreenShot', before)
+                this.$store.commit('switchAfterScreenShot', after)
+                this.$store.commit('switchShowScreenShot', false)
+              })
+            })
+          },100)
         })
       }
     }
