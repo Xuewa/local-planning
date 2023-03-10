@@ -29,7 +29,10 @@ export default {
       map: WebScene,
       view: SceneView,
       vectorLayer: VectorTileLayer,
+      // 放底图 图层
       sketchLayer: GraphicsLayer,
+      // 放polygon图层
+      polygonLayer: GraphicsLayer,
       pointGraphicLayer: GraphicsLayer,
       maskGraphic: Graphic,
       maskPolyline: Graphic,
@@ -53,13 +56,16 @@ export default {
     startState (newVal) {
       if (newVal) {
         this.startAnimation()
-        toRaw(this.pointGraphicLayer).clear()
-        toRaw(this.sketchLayer).clear()
+        toRaw(this.pointGraphicLayer).removeAll()
+        toRaw(this.sketchLayer).removeAll()
+        toRaw(this.polygonLayer).removeAll()
         toRaw(this.pointGraphicLayer).visible = true
+        toRaw(this.polygonLayer).visible = true
         toRaw(this.sketchLayer).visible = true
       }
     },
     geoId(newVal) {
+      const IS_CREATE = true
       if (newVal!==''&&this.geoType == 'polygon') {
         const polygonSymbol = {
           type: "simple-fill", 
@@ -68,13 +74,13 @@ export default {
             width: 0
           }
         }
-        this.createPolygon(polygonSymbol)
+        this.polygonHandler(polygonSymbol,undefined, IS_CREATE)
       } else if(newVal!==''&&this.geoType=='polyline') {
         const symbol = new SimpleLineSymbol({
           color: this.geoColor,
           width: 16
         })
-        this.createPolyline(symbol)
+        this.polylineHandler(symbol,undefined ,IS_CREATE)
       } else if(newVal!==''&&this.geoType=='polyline3D') {
         var size = parseInt(newVal[0])
         size = size * BUILDING_FLOOR_HEIGHT;
@@ -92,7 +98,7 @@ export default {
             size
           }]
         })
-        this.createPolygon(symbol)
+        this.polygonHandler(symbol, undefined,IS_CREATE)
       }
     },
     symbolItem(newVal) {
@@ -135,7 +141,6 @@ export default {
       }
     },
     showScreenShot(newVal) {
-      console.log(newVal)
       if (newVal) {
         var options = {
           format: 'png'
@@ -143,6 +148,7 @@ export default {
         toRaw(this.view).takeScreenshot(options).then((after)=>{
           toRaw(this.vectorLayer).visible = false
           toRaw(this.pointGraphicLayer).visible = false
+          toRaw(this.polygonLayer).visible = false
           setTimeout(() => {
             whenNotOnce(toRaw(this.view), 'updating').then(()=>{
               toRaw(this.view).takeScreenshot(options).then((before)=>{
@@ -183,9 +189,15 @@ export default {
             response.results.some((result) => {
               const graphic = result.graphic;
               if (graphic && graphic.geometry) {
-                console.log(graphic)
                 if (graphic.geometry.type == 'point') {
                   this.pointHandler(undefined,graphic, true,IS_UPDATE)
+                } else if (graphic.geometry.type == 'polyline') {
+                  this.polylineHandler(undefined, graphic, IS_UPDATE)
+                } else {
+                  console.log(graphic.geometry)
+                  if (graphic.geometry.rings[0][0].length==3) {
+                    this.polygonHandler(undefined, graphic, IS_UPDATE)
+                  }
                 }
               }
               return false;
@@ -275,13 +287,20 @@ export default {
           mode: "on-the-ground",
         },
       })
+      const polygonLayer = new GraphicsLayer({
+        elevationInfo: {
+          mode: "on-the-ground",
+        },
+      })
       this.sketchLayer = sketchLayer
+      this.polygonLayer = polygonLayer
       this.pointGraphicLayer = new GraphicsLayer({
         elevationInfo: {
           mode: "relative-to-scene",
-        },
+        }
       })
       toRaw(this.map).add(toRaw(this.sketchLayer))
+      toRaw(this.map).add(toRaw(this.polygonLayer))
       toRaw(this.map).add(toRaw(this.pointGraphicLayer))
       toRaw(this.sketchLayer).add(toRaw(this.maskGraphic))
       toRaw(this.sketchLayer).add(toRaw(this.maskPolyline))
@@ -447,59 +466,85 @@ export default {
       })
       return toRaw(this.view).goTo(tempVP.viewpoint)
     },
-    createPolygon(polygonSymbol) {
+    polygonHandler(polygonSymbol,graphic, create) {
       const sketchViewModel = new SketchViewModel({
         view: toRaw(this.view),
-        layer: toRaw(this.sketchLayer),
+        layer: toRaw(this.polygonLayer),
         polygonSymbol,
         updateOnGraphicClick: false
       })
       const _this = this
       sketchViewModel.on("create", function(event) {
         if (event.state === "complete") {
-          toRaw(_this.sketchLayer).add(event.graphic)
+          toRaw(_this.polygonLayer).add(event.graphic)
           _this.$store.commit('switchGeoId', '')
           _this.$store.commit('switchCurrentOperation',false)
         }
       });
-      sketchViewModel.create('polygon')
-      this.$store.commit('switchCurrentOperation',true)
-    },
-    createPolyline(polylineSymbol) {
-      const sketchViewModel = new SketchViewModel({
-        view: toRaw(this.view),
-        layer: toRaw(this.sketchLayer),
-        polylineSymbol,
-        updateOnGraphicClick: false
-      })
-      const _this = this
-      sketchViewModel.on("create", function(event) {
+      sketchViewModel.on("update", function(event) {
         if (event.state === "complete") {
-          toRaw(_this.sketchLayer).add(event.graphic)
+          toRaw(_this.polygonLayer).add(event.graphics[0])
+          _this.$store.commit('switchGeoId', '')
           _this.$store.commit('switchCurrentOperation',false)
         }
       });
-      sketchViewModel.create('polyline')
+      if (create) {
+        sketchViewModel.create('polygon')
+      } else {
+        sketchViewModel.update(graphic)
+      }
+      this.$store.commit('switchCurrentOperation',true)
+    },
+    polylineHandler(polylineSymbol,graphic, create) {
+      const sketchViewModel = new SketchViewModel({
+        view: toRaw(this.view),
+        layer: toRaw(this.polygonLayer),
+        polylineSymbol,
+        updateOnGraphicClick: false
+      })
+     
+      const _this = this
+      sketchViewModel.on("create", function(event) {
+        if (event.state === "complete") {
+          toRaw(_this.polygonLayer).add(event.graphic)
+          _this.$store.commit('switchCurrentOperation',false)
+        }
+      });
+      sketchViewModel.on("update", function(event) {
+        if (event.state === "complete") {
+          toRaw(_this.polygonLayer).add(event.graphics[0])
+          _this.$store.commit('switchCurrentOperation',false)
+        }
+      });
+      if (create) {
+        sketchViewModel.create('polyline')
+      }else {
+        sketchViewModel.update(graphic)
+      }
       _this.$store.commit('switchCurrentOperation',true)
     },
     pointHandler(pointSymbol, graphic, isIcon, create) {
       const sketchViewModel = new SketchViewModel({
         view: toRaw(this.view),
         layer: toRaw(this.pointGraphicLayer),
-        updateOnGraphicClick: false
+        updateOnGraphicClick: false,
+        defaultCreateOptions: {
+          hasZ: false  // default value
+        },
+        defaultUpdateOptions: {
+          enableZ: false  // default value
+        }
       })
       if (!isIcon&&create) {
         sketchViewModel.pointSymbol = pointSymbol
       }
       graphic = graphic?graphic:new Graphic({symbol:pointSymbol})
-      console.log(graphic.geometry)
-      
       const _this = this
       sketchViewModel.on("create", function(event) {
-        _this.pointGraphicEvent(sketchViewModel,event, graphic, isIcon)
+        _this.pointGraphicEvent(sketchViewModel,event, graphic)
       });
       sketchViewModel.on("update", function(event) {
-        _this.pointGraphicEvent(sketchViewModel,event, graphic, isIcon)
+        _this.pointGraphicEvent(sketchViewModel,event, graphic)
       });
       if  (create) {
         sketchViewModel.create('point')
@@ -507,26 +552,22 @@ export default {
         sketchViewModel.update(graphic)
       }
     },
-    pointGraphicEvent(svm,event,graphic, isIcon){
+    pointGraphicEvent(svm,event,graphic){
       // createEvent->event.graphic; updateEvent->event.graphics;
       const eventGraphic = event.graphic?event.graphic:event.graphics[0]
       graphic.geometry = event.graphic?event.graphic.geometry.clone():event.graphics[0].geometry.clone()
-        // 去除非 pointGraphicLayer 图层的graphic，对于icon而言是下面的圈圈
-        if (event.state === "complete") {
-           if (eventGraphic!==graphic) {
-            svm.layer.remove(eventGraphic)
-          }
-          svm.destroy()
-          svm.cancel()
-          this.$store.commit('switchSymbolItem', null)
-        } else {
-          // 和平面图层不同的图层
-          if (isIcon) {
-            toRaw(this.pointGraphicLayer).add(graphic)
-          } else {
-            toRaw(this.sketchLayer).add(graphic)
-          }
+      // 去除非 pointGraphicLayer 图层的graphic，对于icon而言是下面的圈圈
+      if (event.state === "complete") {
+          if (eventGraphic!==graphic) {
+          svm.layer.remove(eventGraphic)
         }
+        svm.destroy()
+        svm.cancel()
+        this.$store.commit('switchSymbolItem', null)
+      } else {
+        // 和平面图层不同的图层
+        toRaw(this.pointGraphicLayer).add(graphic)
+      }
     }
   }
 }

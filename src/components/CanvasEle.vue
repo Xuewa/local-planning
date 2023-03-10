@@ -7,16 +7,10 @@ export default {
   },
   watch: {
     beforeScreenShot(newScreenShot){
-      console.log(newScreenShot)
       if (newScreenShot) {
         this.generateCanvas()
       }
     } 
-  },
-  updated(){
-    
-
-   
   },
   methods:{
     generateCanvas(){
